@@ -3,79 +3,32 @@
 <head>
 <title>control panel</title>
 <style>
-    body {
-        background: #0f0f0f;
-        color: #e0e0e0;
-        font-family: 'Consolas', monospace;
-        margin: 0;
-        padding: 20px;
-    }
-    .container {
-        max-width: 960px;
-        margin: auto;
-        background: #1a1a1a;
-        padding: 25px;
-        border-radius: 8px;
-        border: 1px solid #333;
-    }
-    h1 {
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    input, textarea {
-        background: #252525;
-        color: #e0e0e0;
-        border: 1px solid #444;
-        padding: 12px;
-        font-family: monospace;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    button {
-        background: #ffffff;
-        color: #111;
-        border: none;
-        padding: 12px 24px;
-        margin: 6px 4px;
-        font-weight: bold;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-    button:hover {
-        background: #ddd;
-    }
-    .stats {
-        background: #1f1f1f;
-        padding: 18px;
-        margin: 20px 0;
-        border: 1px solid #444;
-        border-radius: 6px;
-    }
-    #s {
-        margin-top: 15px;
-        font-weight: bold;
-        text-align: center;
-    }
+    body {background:#0f0f0f;color:#e0e0e0;font-family:monospace;margin:0;padding:20px}
+    .container {max-width:960px;margin:auto;background:#1a1a1a;padding:25px;border-radius:8px;border:1px solid #333}
+    h1 {color:#ffffff;text-align:center}
+    input,textarea {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
+    button {background:#ffffff;color:#111;border:none;padding:12px 24px;margin:6px 4px;font-weight:bold;cursor:pointer;border-radius:4px}
+    button:hover {background:#ddd}
+    .stats {background:#1f1f1f;padding:18px;margin:20px 0;border:1px solid #444;border-radius:6px}
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>simple planel</h1>
+    <h1>control panel</h1>
 
-    <p>Key: <input id="key" readonly></p>
-    <button onclick="genKey()">New Key</button>
-    <button onclick="serverHop()">Server Hop</button>
+    <p>key: <input id="key" readonly></p>
+    <button onclick="genKey()">new key</button>
+    <button onclick="serverHop()">server hop</button>
 
     <div class="stats">
-        <h3>stats</h3>
-        <div id="stats">waiting.</div>
+        <h3>leaderboard stats</h3>
+        <div id="stats">waiting for data</div>
     </div>
 
-    <textarea id="code" placeholder="Paste your script here..."></textarea><br>
+    <textarea id="code" placeholder="paste script here"></textarea><br>
 
-    <button onclick="send()">run code kinda useless</button>
-    <button onclick="document.getElementById('code').value = ''">Clear</button>
+    <button onclick="send()">execute code</button>
+    <button onclick="document.getElementById('code').value = ''">clear</button>
 
     <div id="s">ready</div>
 </div>
@@ -89,27 +42,21 @@ function genKey() {
     document.getElementById("key").value = myKey;
 }
 
-if (myKey) {
-    document.getElementById("key").value = myKey;
-} else {
-    genKey();
-}
+if (myKey) document.getElementById("key").value = myKey;
+else genKey();
 
 async function send() {
     let code = document.getElementById("code").value.trim();
     let s = document.getElementById("s");
-    if (!code) {
-        s.textContent = "no code";
-        return;
-    }
-    s.textContent = "sending...";
+    if (!code) return s.textContent = "no code";
+    s.textContent = "sending";
     try {
         await fetch("/api/execute", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({key: myKey, script: code})
         });
-        s.textContent = "executed";
+        s.textContent = "done";
     } catch(e) {
         s.textContent = "error";
     }
@@ -121,21 +68,19 @@ function serverHop() {
     send();
 }
 
-// Stats tracker
+// auto stats
 setInterval(() => {
-    let statsCode = `
-        local p = game.Players.LocalPlayer
-        local kills = 0
-        local total = 0
-        if p.leaderstats then
-            if p.leaderstats:FindFirstChild("Kills") then kills = p.leaderstats.Kills.Value end
-            if p.leaderstats:FindFirstChild("Total Kills") then total = p.leaderstats["Total Kills"].Value end
-        end
-        print("KILLS:" .. kills .. "|TOTAL:" .. total)
-    `;
-    document.getElementById("code").value = statsCode;
+    let code = `local p = game.Players.LocalPlayer
+local k = 0
+local t = 0
+if p.leaderstats then
+    if p.leaderstats:FindFirstChild("Kills") then k = p.leaderstats.Kills.Value end
+    if p.leaderstats:FindFirstChild("Total Kills") then t = p.leaderstats["Total Kills"].Value end
+end
+print("STATS|" .. k .. "|" .. t)`;
+    document.getElementById("code").value = code;
     send();
-}, 10000); // every 10 seconds
+}, 10000);
 </script>
 </body>
 </html>
