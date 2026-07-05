@@ -49,14 +49,14 @@ async function send(code) {
             body: JSON.stringify({key: myKey, script: code})
         });
         s.textContent = "sent";
-        setTimeout(() => s.textContent = "ready", 2000);
+        setTimeout(() => s.textContent = "ready", 1500);
     } catch(e) {
         s.textContent = "error";
     }
 }
 
 function serverHop() {
-    let code = `game.TeleportService:Teleport(10449761463)`;
+    let code = `print("SERVER HOP TRIGGERED") game.TeleportService:Teleport(10449761463)`;
     send(code);
 }
 
@@ -71,7 +71,7 @@ if p.leaderstats then
 end
 print("STATS|" .. k .. "|" .. t)`;
     send(code);
-}, 6000);
+}, 7000);
 </script>
 </body>
 </html>
