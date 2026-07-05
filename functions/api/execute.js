@@ -1,12 +1,16 @@
 let scripts = {};
-let stats = {};
+let statsData = {};
 
 export async function onRequestPost({request}) {
     try {
         let data = await request.json();
         let key = data.key;
         if (key) {
-            scripts[key] = data.script || "";
+            if (data.kills !== undefined) {
+                statsData[key] = {kills: data.kills, total: data.total || 0};
+            } else {
+                scripts[key] = data.script || "";
+            }
         }
         return new Response(JSON.stringify({ok:true}));
     } catch(e) {
@@ -20,7 +24,7 @@ export async function onRequestGet({request}) {
     let clear = url.searchParams.get("clear");
     
     if (url.pathname.includes("/stats")) {
-        return new Response(JSON.stringify(stats[key] || {kills:0,total:0}));
+        return new Response(JSON.stringify(statsData[key] || {kills:0,total:0}));
     }
     
     let current = scripts[key] || "";
