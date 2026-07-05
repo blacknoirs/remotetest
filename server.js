@@ -2,16 +2,15 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-let currentCommand = { script: "" };
+let script = "";
 
-app.get('/commands.json', (req, res) => {
-    res.json(currentCommand);
+app.get('/commands', (req, res) => {
+    res.json({script: script});
 });
 
 app.post('/execute', (req, res) => {
-    currentCommand.script = req.body.script || "";
-    console.log("📥 New script received!");
-    res.json({ success: true });
+    script = req.body.script || "";
+    res.json({ok: true});
 });
 
-app.listen(3000, () => console.log("✅ API is running!"));
+app.listen(3000, () => console.log("running"));
