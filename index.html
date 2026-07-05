@@ -6,7 +6,7 @@
     body {background:#0f0f0f;color:#e0e0e0;font-family:monospace;margin:0;padding:20px}
     .container {max-width:960px;margin:auto;background:#1a1a1a;padding:25px;border-radius:8px;border:1px solid #333}
     h1 {color:#ffffff;text-align:center}
-    input,textarea {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
+    input {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
     button {background:#ffffff;color:#111;border:none;padding:12px 24px;margin:6px 4px;font-weight:bold;cursor:pointer;border-radius:4px}
     button:hover {background:#ddd}
     .stats {background:#1f1f1f;padding:18px;margin:20px 0;border:1px solid #444;border-radius:6px}
@@ -25,11 +25,6 @@
         <div id="stats">waiting for data</div>
     </div>
 
-    <textarea id="code" placeholder="paste script here"></textarea><br>
-
-    <button onclick="send()">execute code</button>
-    <button onclick="document.getElementById('code').value = ''">clear</button>
-
     <div id="s">ready</div>
 </div>
 
@@ -45,42 +40,23 @@ function genKey() {
 if (myKey) document.getElementById("key").value = myKey;
 else genKey();
 
-async function send() {
-    let code = document.getElementById("code").value.trim();
-    let s = document.getElementById("s");
-    if (!code) return s.textContent = "no code";
-    s.textContent = "sending";
-    try {
-        await fetch("/api/execute", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({key: myKey, script: code})
-        });
-        s.textContent = "done";
-    } catch(e) {
-        s.textContent = "error";
-    }
-}
-
 function serverHop() {
-    let code = `game.TeleportService:Teleport(10449761463)`;
-    document.getElementById("code").value = code;
-    send();
+    fetch("/api/execute", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({key: myKey, script: `game.TeleportService:Teleport(10449761463)`})
+    });
 }
 
-// auto stats
+// auto get stats
 setInterval(() => {
-    let code = `local p = game.Players.LocalPlayer
-local k = 0
-local t = 0
-if p.leaderstats then
-    if p.leaderstats:FindFirstChild("Kills") then k = p.leaderstats.Kills.Value end
-    if p.leaderstats:FindFirstChild("Total Kills") then t = p.leaderstats["Total Kills"].Value end
-end
-print("STATS|" .. k .. "|" .. t)`;
-    document.getElementById("code").value = code;
-    send();
-}, 10000);
+    fetch("/api/stats?key=" + myKey)
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById("stats").innerHTML = "kills: " + (d.kills || 0) + "<br>total kills: " + (d.total || 0);
+    })
+    .catch(() => {});
+}, 5000);
 </script>
 </body>
 </html>
