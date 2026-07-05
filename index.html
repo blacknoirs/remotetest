@@ -56,11 +56,10 @@ async function send(code) {
 }
 
 function serverHop() {
-    let code = `print("SERVER HOP TRIGGERED") game.TeleportService:Teleport(10449761463)`;
+    let code = `print("SERVERHOP TRIGGERED BY PANEL") game.TeleportService:Teleport(10449761463)`;
     send(code);
 }
 
-// auto stats
 setInterval(() => {
     let code = `local p = game.Players.LocalPlayer
 local k = 0
@@ -71,7 +70,7 @@ if p.leaderstats then
 end
 print("STATS|" .. k .. "|" .. t)`;
     send(code);
-}, 7000);
+}, 6000);
 </script>
 </body>
 </html>
