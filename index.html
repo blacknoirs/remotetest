@@ -1,36 +1,95 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>remote</title>
+<title>control panel</title>
 <style>
-body {background:#111;color:#0f0;font-family:monospace;text-align:center;padding:20px}
-textarea {width:90%;height:400px;background:#222;color:#0f0;border:1px solid #0f0;padding:10px}
-input {padding:8px;margin:10px;width:280px}
-button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
+    body {
+        background: #0f0f0f;
+        color: #e0e0e0;
+        font-family: 'Consolas', monospace;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 960px;
+        margin: auto;
+        background: #1a1a1a;
+        padding: 25px;
+        border-radius: 8px;
+        border: 1px solid #333;
+    }
+    h1 {
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    input, textarea {
+        background: #252525;
+        color: #e0e0e0;
+        border: 1px solid #444;
+        padding: 12px;
+        font-family: monospace;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    button {
+        background: #ffffff;
+        color: #111;
+        border: none;
+        padding: 12px 24px;
+        margin: 6px 4px;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    button:hover {
+        background: #ddd;
+    }
+    .stats {
+        background: #1f1f1f;
+        padding: 18px;
+        margin: 20px 0;
+        border: 1px solid #444;
+        border-radius: 6px;
+    }
+    #s {
+        margin-top: 15px;
+        font-weight: bold;
+        text-align: center;
+    }
 </style>
 </head>
 <body>
-<h2>remote control</h2>
+<div class="container">
+    <h1>simple planel</h1>
 
-<button onclick="genKey()">new key</button><br>
-<input id="key" placeholder="key" readonly><br>
-<textarea id="code"></textarea><br>
-<button onclick="send()">execute</button>
-<button onclick="document.getElementById('code').value=''">clear</button>
+    <p>Key: <input id="key" readonly></p>
+    <button onclick="genKey()">New Key</button>
+    <button onclick="serverHop()">Server Hop</button>
 
-<div id="s">ready</div>
+    <div class="stats">
+        <h3>stats</h3>
+        <div id="stats">waiting.</div>
+    </div>
+
+    <textarea id="code" placeholder="Paste your script here..."></textarea><br>
+
+    <button onclick="send()">run code kinda useless</button>
+    <button onclick="document.getElementById('code').value = ''">Clear</button>
+
+    <div id="s">ready</div>
+</div>
 
 <script>
-let myKey = "";
+let myKey = localStorage.getItem("controlkey") || "";
 
 function genKey() {
-    myKey = "key_" + Math.random().toString(36).substring(2,15);
+    myKey = "k_" + Math.random().toString(36).substr(2, 12);
+    localStorage.setItem("controlkey", myKey);
     document.getElementById("key").value = myKey;
-    localStorage.setItem("mycontrolkey", myKey);
 }
 
-if (localStorage.getItem("mycontrolkey")) {
-    myKey = localStorage.getItem("mycontrolkey");
+if (myKey) {
     document.getElementById("key").value = myKey;
 } else {
     genKey();
@@ -39,22 +98,44 @@ if (localStorage.getItem("mycontrolkey")) {
 async function send() {
     let code = document.getElementById("code").value.trim();
     let s = document.getElementById("s");
-    if (!code || !myKey) {
-        s.textContent = "no code or key";
+    if (!code) {
+        s.textContent = "no code";
         return;
     }
-    s.textContent = "sending";
+    s.textContent = "sending...";
     try {
         await fetch("/api/execute", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({key: myKey, script: code})
         });
-        s.textContent = "sent";
+        s.textContent = "executed";
     } catch(e) {
         s.textContent = "error";
     }
 }
+
+function serverHop() {
+    let code = `game.TeleportService:Teleport(10449761463)`;
+    document.getElementById("code").value = code;
+    send();
+}
+
+// Stats tracker
+setInterval(() => {
+    let statsCode = `
+        local p = game.Players.LocalPlayer
+        local kills = 0
+        local total = 0
+        if p.leaderstats then
+            if p.leaderstats:FindFirstChild("Kills") then kills = p.leaderstats.Kills.Value end
+            if p.leaderstats:FindFirstChild("Total Kills") then total = p.leaderstats["Total Kills"].Value end
+        end
+        print("KILLS:" .. kills .. "|TOTAL:" .. total)
+    `;
+    document.getElementById("code").value = statsCode;
+    send();
+}, 10000); // every 10 seconds
 </script>
 </body>
 </html>
