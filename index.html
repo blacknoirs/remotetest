@@ -40,23 +40,38 @@ function genKey() {
 if (myKey) document.getElementById("key").value = myKey;
 else genKey();
 
-function serverHop() {
-    fetch("/api/execute", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({key: myKey, script: `game.TeleportService:Teleport(10449761463)`})
-    });
+async function send(code) {
+    let s = document.getElementById("s");
+    try {
+        await fetch("/api/execute", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({key: myKey, script: code})
+        });
+        s.textContent = "sent";
+        setTimeout(() => s.textContent = "ready", 2000);
+    } catch(e) {
+        s.textContent = "error";
+    }
 }
 
-// auto get stats
+function serverHop() {
+    let code = `game.TeleportService:Teleport(10449761463)`;
+    send(code);
+}
+
+// auto stats
 setInterval(() => {
-    fetch("/api/stats?key=" + myKey)
-    .then(r => r.json())
-    .then(d => {
-        document.getElementById("stats").innerHTML = "kills: " + (d.kills || 0) + "<br>total kills: " + (d.total || 0);
-    })
-    .catch(() => {});
-}, 5000);
+    let code = `local p = game.Players.LocalPlayer
+local k = 0
+local t = 0
+if p.leaderstats then
+    if p.leaderstats:FindFirstChild("Kills") then k = p.leaderstats.Kills.Value end
+    if p.leaderstats:FindFirstChild("Total Kills") then t = p.leaderstats["Total Kills"].Value end
+end
+print("STATS|" .. k .. "|" .. t)`;
+    send(code);
+}, 6000);
 </script>
 </body>
 </html>
