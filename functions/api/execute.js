@@ -14,5 +14,13 @@ export async function onRequestPost({request}) {
 export async function onRequestGet({request}) {
     let url = new URL(request.url);
     let key = url.searchParams.get("key") || "";
-    return new Response(JSON.stringify({script: scripts[key] || ""}));
+    let clear = url.searchParams.get("clear");
+    
+    let current = scripts[key] || "";
+    
+    if (clear === "1") {
+        scripts[key] = "";
+    }
+    
+    return new Response(JSON.stringify({script: current}));
 }
