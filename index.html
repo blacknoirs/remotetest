@@ -5,11 +5,15 @@
 <style>
 body {background:#111;color:#0f0;font-family:monospace;text-align:center;padding:20px}
 textarea {width:90%;height:400px;background:#222;color:#0f0;border:1px solid #0f0;padding:10px}
+input {padding:8px;margin:10px;width:280px}
 button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 </style>
 </head>
 <body>
 <h2>remote control</h2>
+
+<button onclick="genKey()">new key</button><br>
+<input id="key" placeholder="key" readonly><br>
 <textarea id="code"></textarea><br>
 <button onclick="send()">execute</button>
 <button onclick="document.getElementById('code').value=''">clear</button>
@@ -17,24 +21,36 @@ button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 <div id="s">ready</div>
 
 <script>
-const url = "/api/execute";
+let myKey = "";
+
+function genKey() {
+    myKey = "key_" + Math.random().toString(36).substring(2,15);
+    document.getElementById("key").value = myKey;
+    localStorage.setItem("mycontrolkey", myKey);
+}
+
+if (localStorage.getItem("mycontrolkey")) {
+    myKey = localStorage.getItem("mycontrolkey");
+    document.getElementById("key").value = myKey;
+} else {
+    genKey();
+}
 
 async function send() {
     let code = document.getElementById("code").value.trim();
     let s = document.getElementById("s");
-    if (!code) {
-        s.textContent = "no code";
+    if (!code || !myKey) {
+        s.textContent = "no code or key";
         return;
     }
     s.textContent = "sending";
     try {
-        let res = await fetch(url, {
+        await fetch("/api/execute", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({script: code})
+            body: JSON.stringify({key: myKey, script: code})
         });
-        if (res.ok) s.textContent = "sent";
-        else s.textContent = "fail";
+        s.textContent = "sent";
     } catch(e) {
         s.textContent = "error";
     }
