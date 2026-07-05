@@ -6,7 +6,7 @@
     body {background:#0f0f0f;color:#e0e0e0;font-family:monospace;margin:0;padding:20px}
     .container {max-width:960px;margin:auto;background:#1a1a1a;padding:25px;border-radius:8px;border:1px solid #333}
     h1 {color:#ffffff;text-align:center}
-    input {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
+    input,textarea {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
     button {background:#ffffff;color:#111;border:none;padding:12px 24px;margin:6px 4px;font-weight:bold;cursor:pointer;border-radius:4px}
     button:hover {background:#ddd}
     .stats {background:#1f1f1f;padding:18px;margin:20px 0;border:1px solid #444;border-radius:6px}
@@ -17,6 +17,7 @@
     <h1>control panel</h1>
 
     <p>key: <input id="key" readonly></p>
+    <p>webhook: <input id="webhook" placeholder="discord webhook url"></p>
     <button onclick="genKey()">new key</button>
     <button onclick="serverHop()">server hop</button>
 
@@ -56,11 +57,12 @@ async function send(code) {
 }
 
 function serverHop() {
-    let code = `print("SERVERHOP TRIGGERED BY PANEL") game.TeleportService:Teleport(10449761463)`;
+    let code = `print("SERVERHOP TRIGGERED") game.TeleportService:Teleport(10449761463)`;
     send(code);
 }
 
 setInterval(() => {
+    let webhook = document.getElementById("webhook").value;
     let code = `local p = game.Players.LocalPlayer
 local k = 0
 local t = 0
@@ -68,9 +70,14 @@ if p.leaderstats then
     if p.leaderstats:FindFirstChild("Kills") then k = p.leaderstats.Kills.Value end
     if p.leaderstats:FindFirstChild("Total Kills") then t = p.leaderstats["Total Kills"].Value end
 end
-print("STATS|" .. k .. "|" .. t)`;
+print("STATS|" .. k .. "|" .. t)
+if "` + webhook + `" ~= "" then
+    pcall(function()
+        game:GetService("HttpService"):PostAsync("` + webhook + `", game:GetService("HttpService"):JSONEncode({content = "Kills: " .. k .. " | Total: " .. t}))
+    end)
+end`;
     send(code);
-}, 6000);
+}, 7000);
 </script>
 </body>
 </html>
