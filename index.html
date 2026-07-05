@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Remote Executor</title>
+    <style>
+        body { font-family: Arial; background: #111; color: #0f0; text-align: center; padding: 20px; }
+        textarea { width: 80%; height: 300px; background: #222; color: #0f0; border: 2px solid #0f0; font-family: monospace; padding: 10px; }
+        button { padding: 15px 30px; font-size: 18px; background: #0f0; color: #000; border: none; cursor: pointer; margin: 10px; }
+        button:hover { background: #0c0; }
+        #status { margin-top: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>🕹️ Roblox Remote Executor</h1>
+    <textarea id="code" placeholder="Paste your Lua script here..."></textarea><br><br>
+    <button onclick="executeCode()">🚀 EXECUTE ON ROBLOX</button>
+    <button onclick="clearCode()">Clear</button>
+    
+    <div id="status">Ready - Waiting for API URL...</div>
+
+    <script>
+        // CHANGE THIS LINE ↓↓↓
+        const API_URL = "https://YOUR-BACKEND-URL-HERE/execute";
+
+        async function executeCode() {
+            const code = document.getElementById("code").value.trim();
+            const status = document.getElementById("status");
+            
+            if (!code) {
+                status.textContent = "❌ Write some code first!";
+                return;
+            }
+
+            status.textContent = "Sending to Roblox...";
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ script: code })
+                });
+                
+                if (res.ok) {
+                    status.textContent = "✅ Sent successfully! Check Roblox.";
+                } else {
+                    status.textContent = "❌ Send failed.";
+                }
+            } catch (e) {
+                status.textContent = "❌ Can't connect to backend. Check API_URL";
+            }
+        }
+
+        function clearCode() {
+            document.getElementById("code").value = "";
+        }
+    </script>
+</body>
+</html>
