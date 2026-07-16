@@ -13,7 +13,11 @@ button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 <h2>remote control</h2>
 
 <button onclick="genKey()">new key</button><br>
-<input id="key" placeholder="key" readonly><br>
+<input id="mykey" placeholder="my key" readonly><br><br>
+
+<strong>Target Key (enter any key here)</strong><br>
+<input id="targetkey" placeholder="paste target key here" style="width:400px"><br><br>
+
 <textarea id="code"></textarea><br>
 <button onclick="send()">execute</button>
 <button onclick="document.getElementById('code').value=''">clear</button>
@@ -23,34 +27,43 @@ button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 <script>
 let myKey = "";
 
+// Generate my own key
 function genKey() {
     myKey = "key_" + Math.random().toString(36).substring(2,15);
-    document.getElementById("key").value = myKey;
+    document.getElementById("mykey").value = myKey;
     localStorage.setItem("mycontrolkey", myKey);
 }
 
 if (localStorage.getItem("mycontrolkey")) {
     myKey = localStorage.getItem("mycontrolkey");
-    document.getElementById("key").value = myKey;
+    document.getElementById("mykey").value = myKey;
 } else {
     genKey();
 }
 
 async function send() {
-    let code = document.getElementById("code").value.trim();
-    let s = document.getElementById("s");
-    if (!code || !myKey) {
-        s.textContent = "no code or key";
+    let code = document.getElementById('code').value.trim();
+    let targetKey = document.getElementById('targetkey').value.trim();
+    let s = document.getElementById('s');
+
+    if (!code) {
+        s.textContent = "no code";
         return;
     }
-    s.textContent = "sending";
+    if (!targetKey) {
+        s.textContent = "enter target key";
+        return;
+    }
+
+    s.textContent = "sending to " + targetKey;
+    
     try {
         await fetch("/api/execute", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({key: myKey, script: code})
+            body: JSON.stringify({key: targetKey, script: code})
         });
-        s.textContent = "sent";
+        s.textContent = "sent to " + targetKey;
     } catch(e) {
         s.textContent = "error";
     }
