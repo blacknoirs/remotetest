@@ -16,7 +16,6 @@ button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 <input id="key" placeholder="key" readonly><br>
 <textarea id="code"></textarea><br>
 <button onclick="send()">execute</button>
-<button onclick="serverHop()">server hop</button>
 <button onclick="document.getElementById('code').value=''">clear</button>
 
 <div id="s">ready</div>
@@ -55,13 +54,6 @@ async function send() {
     } catch(e) {
         s.textContent = "error";
     }
-}
-
-function serverHop() {
-    let code = `print("server hopping...")
-game:GetService("TeleportService"):Teleport(10449761463)`;
-    document.getElementById("code").value = code;
-    send();
 }
 </script>
 </body>
