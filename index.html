@@ -1,48 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>control panel</title>
+<title>remote</title>
 <style>
-    body {background:#0f0f0f;color:#e0e0e0;font-family:monospace;margin:0;padding:20px}
-    .container {max-width:960px;margin:auto;background:#1a1a1a;padding:25px;border-radius:8px;border:1px solid #333}
-    h1 {color:#ffffff;text-align:center}
-    input {background:#252525;color:#e0e0e0;border:1px solid #444;padding:12px;width:100%;box-sizing:border-box}
-    button {background:#ffffff;color:#111;border:none;padding:12px 24px;margin:6px 4px;font-weight:bold;cursor:pointer;border-radius:4px}
-    button:hover {background:#ddd}
-    .stats {background:#1f1f1f;padding:18px;margin:20px 0;border:1px solid #444;border-radius:6px}
+body {background:#111;color:#0f0;font-family:monospace;text-align:center;padding:20px}
+textarea {width:90%;height:400px;background:#222;color:#0f0;border:1px solid #0f0;padding:10px}
+input {padding:8px;margin:10px;width:280px}
+button {padding:12px 30px;font-size:16px;background:#0f0;color:#000;margin:10px}
 </style>
 </head>
 <body>
-<div class="container">
-    <h1>control panel</h1>
+<h2>remote control</h2>
 
-    <p>key: <input id="key" readonly></p>
-    <p>webhook: <input id="webhook" placeholder="discord webhook url"></p>
-    <button onclick="genKey()">new key</button>
-    <button onclick="serverHop()">server hop</button>
+<button onclick="genKey()">new key</button><br>
+<input id="key" placeholder="key" readonly><br>
+<textarea id="code"></textarea><br>
+<button onclick="send()">execute</button>
+<button onclick="serverHop()">server hop</button>
+<button onclick="document.getElementById('code').value=''">clear</button>
 
-    <div class="stats">
-        <h3>leaderboard stats</h3>
-        <div id="stats">waiting for data</div>
-    </div>
-
-    <div id="s">ready</div>
-</div>
+<div id="s">ready</div>
 
 <script>
-let myKey = localStorage.getItem("controlkey") || "";
+let myKey = "";
 
 function genKey() {
-    myKey = "k_" + Math.random().toString(36).substr(2, 12);
-    localStorage.setItem("controlkey", myKey);
+    myKey = "key_" + Math.random().toString(36).substring(2,15);
     document.getElementById("key").value = myKey;
+    localStorage.setItem("mycontrolkey", myKey);
 }
 
-if (myKey) document.getElementById("key").value = myKey;
-else genKey();
+if (localStorage.getItem("mycontrolkey")) {
+    myKey = localStorage.getItem("mycontrolkey");
+    document.getElementById("key").value = myKey;
+} else {
+    genKey();
+}
 
-async function send(code) {
+async function send() {
+    let code = document.getElementById("code").value.trim();
     let s = document.getElementById("s");
+    if (!code || !myKey) {
+        s.textContent = "no code or key";
+        return;
+    }
+    s.textContent = "sending";
     try {
         await fetch("/api/execute", {
             method: "POST",
@@ -50,57 +52,17 @@ async function send(code) {
             body: JSON.stringify({key: myKey, script: code})
         });
         s.textContent = "sent";
-        setTimeout(() => s.textContent = "ready", 1500);
     } catch(e) {
         s.textContent = "error";
     }
 }
 
 function serverHop() {
-    let code = `local TeleportService = game:GetService("TeleportService")
-local lp = game.Players.LocalPlayer
-local servers_args = {}
-local function getMostPlayersServerId(data)
-    local candidates = {}
-    for _, server in ipairs(data.servers) do
-        local players = tonumber(server.players)
-        if players and players >= 10 and players <= 13 then
-            table.insert(candidates, server.id)
-        end
-    end
-    if #candidates == 0 then return nil end
-    local randomIndex = math.random(1, #candidates)
-    return candidates[randomIndex]
-end
-local serverlist = game:GetService("ReplicatedStorage"):WaitForChild("Ranked"):WaitForChild("GetServerBrowserData"):InvokeServer(unpack(servers_args))
-local best = getMostPlayersServerId(serverlist)
-if best then
-    print("HOPPING TO GOOD SERVER")
-    TeleportService:TeleportToPlaceInstance(game.PlaceId, best, lp)
-else
-    print("no good server found")
-    TeleportService:Teleport(10449761463)
-end`;
-    send(code);
+    let code = `print("server hopping...")
+game:GetService("TeleportService"):Teleport(10449761463)`;
+    document.getElementById("code").value = code;
+    send();
 }
-
-setInterval(() => {
-    let webhook = document.getElementById("webhook").value;
-    let code = `local p = game.Players.LocalPlayer
-local k = 0
-local t = 0
-if p.leaderstats then
-    if p.leaderstats:FindFirstChild("Kills") then k = p.leaderstats.Kills.Value end
-    if p.leaderstats:FindFirstChild("Total Kills") then t = p.leaderstats["Total Kills"].Value end
-end
-print("STATS|" .. k .. "|" .. t)
-if "` + webhook + `" ~= "" then
-    pcall(function()
-        game:GetService("HttpService"):PostAsync("` + webhook + `", game:GetService("HttpService"):JSONEncode({content = "Kills: " .. k .. " | Total: " .. t}))
-    end)
-end`;
-    send(code);
-}, 7000);
 </script>
 </body>
 </html>
